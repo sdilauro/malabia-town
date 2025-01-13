@@ -8,7 +8,6 @@ import {
   AvatarAttach,
   ColliderLayer,
   engine,
-  type Entity,
   GltfContainer,
   InputAction,
   Material,
@@ -17,7 +16,7 @@ import {
   pointerEventsSystem,
   TextShape,
   Transform,
- type TransformType,
+  type TransformType,
   VideoPlayer
 } from '@dcl/sdk/src/ecs'
 // import * as eth from "eth-connect"
@@ -90,6 +89,8 @@ import {
   terrazafxFrames,
   electricidadPasilloFrames
 } from './creatorFunctions'
+import { makeDonation } from './donation'
+import { Board } from './board'
 // import { abiManaArray } from './erc20Abi'
 // import { abiMensajes } from './mensajesAbi'
 
@@ -145,7 +146,9 @@ export function main(): void {
   const buildingCore = engine.addEntity()
   Transform.create(buildingCore, { position: Vector3.create(0, -500, 0) })
 
-  const MAIN_TRANSFORM: Partial<TransformType> = { position: Vector3.create(24, 0, 24) }
+  const MAIN_TRANSFORM: Partial<TransformType> = {
+    position: Vector3.create(24, 0, 24)
+  }
 
   const bosque = engine.addEntity()
   GltfContainer.create(bosque, {
@@ -174,12 +177,16 @@ export function main(): void {
   createEntityWBT(buildingCore, lav02T, 'models/lavarropas.gltf')
   createEntityWBT(buildingCore, lav03T, 'models/lavarropas.gltf')
   createEntityWBT(buildingCore, rayosT, 'models/lavarropas_rayos.gltf')
-  
+
   // Heart, toilets
   createEntityWBT(buildingCore, corazonT, 'models/corazon.gltf')
   createEntityWBT(buildingCore, inodorosT, 'models/inodoros.gltf')
-  const telefono = createEntityWBT(buildingCore, telefonoT, 'models/telefono.gltf')
-  
+  const telefono = createEntityWBT(
+    buildingCore,
+    telefonoT,
+    'models/telefono.gltf'
+  )
+
   // Phone
   pointerEventsSystem.onPointerDown(
     {
@@ -197,7 +204,7 @@ export function main(): void {
   )
 
   // Screen
-  const pantalla =  createEntityWBT(buildingCore, pantallaT, '', true)
+  const pantalla = createEntityWBT(buildingCore, pantallaT, '', true)
   MeshRenderer.setPlane(pantalla)
   MeshCollider.setPlane(pantalla)
 
@@ -279,7 +286,23 @@ input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, (e) => {
   //     }
   //   }
   // }
+  // const sign = engine.addEntity()
 
+  // Transform.create(sign, {
+  //   position: Vector3.create(10.14, 1.88, 28.27),
+  //   rotation: Quaternion.fromEulerDegrees(0, 90, 0),
+  //   scale: Vector3.create(0.2, 0.2, 0.2)
+  // })
+
+  // TextShape.create(sign, {
+  //   text: 'Hello World',
+  //   textColor: Color4.Red(),
+  //   fontSize: 5,
+  //   font: Font.F_SANS_SERIF
+  // })
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const board = new Board()
+  board.fillSingFromDb()
   const donacion = engine.addEntity()
   GltfContainer.create(donacion, { src: 'models/expendedora.gltf' })
   Transform.create(donacion, blenderTransform(donacionT, buildingCore))
@@ -292,6 +315,28 @@ input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, (e) => {
 
   // Vending machine for donations
 
+  const donateBox = engine.addEntity()
+  // MeshRenderer.setBox(donateBox)
+  MeshCollider.setBox(donateBox)
+  Transform.create(donateBox, {
+    position: Vector3.create(5.54, 0.88, 29.46),
+    scale: Vector3.create(1.75, 3.25, 2.25)
+  })
+
+  pointerEventsSystem.onPointerDown(
+    {
+      entity: donateBox,
+      opts: {
+        button: InputAction.IA_POINTER,
+        hoverText: 'Donate Here!',
+        maxDistance: 5
+      }
+    },
+    function () {
+      console.log('here')
+      void makeDonation(10)
+    }
+  )
   // pointerEventsSystem.onPointerDown(
   // 	{
   // 		entity: donacion,
@@ -328,8 +373,6 @@ input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, (e) => {
   // const mensajeOk = ui.createComponent(ui.Announcement, { value: '¡Mensaje en camino! Aparecerá en unos segundos', duration: 10, startHidden: true, yOffset: -40 })
   // const mensajeError = ui.createComponent(ui.Announcement, { value: 'Error al enviar mensaje ¿Está conectado MetaMask?', duration: 10, startHidden: true, yOffset: -60 })
 
-  
-
   for (let n = 0; n < antorchasT.length; n++) {
     const antorcha = engine.addEntity()
     GltfContainer.create(antorcha, { src: 'models/antorcha.gltf' })
@@ -348,8 +391,8 @@ input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, (e) => {
         randomRange(-16, 16)
       ),
       rotation: Quaternion.fromEulerDegrees(0, randomRange(0, 170), 0),
-      scale: Vector3.create(1.5, 1.5, 1.5),
-    } )
+      scale: Vector3.create(1.5, 1.5, 1.5)
+    })
   }
 
   /* Puerta principal */
@@ -360,8 +403,6 @@ input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, (e) => {
     position: Vector3.create(16 + 8, 1, 16 + 8),
     parent: bosque
   })
-
- 
 
   for (let n = 0; n < portales.length; n++) {
     const electricidad = engine.addEntity()
@@ -511,43 +552,37 @@ input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, (e) => {
   //   }
 
   /* Electricidad */
-  
 
   // Puerta principal (Bosque)
   createEntity(bosque, electricidadPasilloFrames, {
     position: Vector3.create(1.2, 0.2, 1.2),
     scale: Vector3.create(3, 10, 3),
-    rotation: Quaternion.fromEulerDegrees(0, 0, 0),
+    rotation: Quaternion.fromEulerDegrees(0, 0, 0)
   })
-  
 
   // Vulva
   createEntity(buildingCore, electricidadPasilloFrames, {
     position: Vector3.create(14, 0.1, 14.5),
-    scale: Vector3.create(1, 0.7, 1),
+    scale: Vector3.create(1, 0.7, 1)
   })
-  
 
   // Inodoros
   createEntity(buildingCore, electricidadPasilloFrames, {
     position: Vector3.create(9, 6.92, 11.54),
-    scale: Vector3.create(1.5, 2, 1.5),
+    scale: Vector3.create(1.5, 2, 1.5)
   })
-  
 
   // Lavadero
   createEntity(buildingCore, electricidadPasilloFrames, {
     position: Vector3.create(38.64, 0.05, 11.42),
-    scale: Vector3.create(1, 0.6, 1),
+    scale: Vector3.create(1, 0.6, 1)
   })
-  
 
   // Pasillo
   createEntity(buildingCore, electricidadPasilloFrames, {
     position: Vector3.create(46.17, 0.05, 30.97),
-    scale: Vector3.create(1, 0.9, 1),
+    scale: Vector3.create(1, 0.9, 1)
   })
-  
 
   engine.addSystem(AnimationModelsSystem)
 
@@ -731,7 +766,12 @@ input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, (e) => {
 
   /* Caldero */
 
-  const caldero =   createEntityWBT(buildingCore, calderoT, 'models/caldero.gltf', true)
+  const caldero = createEntityWBT(
+    buildingCore,
+    calderoT,
+    'models/caldero.gltf',
+    true
+  )
   AudioSource.create(caldero, {
     audioClipUrl: 'audio/caldero.mp3',
     playing: true,
@@ -894,15 +934,11 @@ input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, (e) => {
 
   calderoRandom()
 
-
-
   const malabiaUpload = createModelsAnimation(malabiaUploadFrames, true, true)
   Transform.create(
     malabiaUpload,
     blenderTransform(malabiaUploadT, buildingCore)
   )
-
-
 
   const alfombrafx = createModelsAnimation(alfombrafxFrames, true, true)
   Transform.create(alfombrafx, blenderTransform(malabiafxT, buildingCore))
@@ -913,18 +949,14 @@ input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, (e) => {
     parent: buildingCore
   })
 
-
-
   const caballofx = createModelsAnimation(caballofxFrames, true, true)
   Transform.create(caballofx, blenderTransform(caballofxT, buildingCore))
-
-
 
   const tunelfx = createModelsAnimation(tunelfxFrames, true, true)
   Transform.create(tunelfx, blenderTransform(tunelfxT, buildingCore))
 
   /* Portal Anim */
- 
+
   const portalfx = createModelsAnimation(portalfxFrames, true, true)
   Transform.create(portalfx, {
     position: Vector3.create(0, 0, 0),
@@ -932,7 +964,6 @@ input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, (e) => {
   })
 
   /* Terraza Anim */
-
 
   const terrazafx = createModelsAnimation(terrazafxFrames, true, true)
   Transform.create(terrazafx, blenderTransform(terrazafxT, buildingCore))
@@ -944,7 +975,6 @@ input.subscribe("BUTTON_DOWN", ActionButton.PRIMARY, false, (e) => {
   Transform.create(velafx, blenderTransform(velaT, buildingCore))
 
   /* Exit Anim */
- 
 
   const exit1 = createModelsAnimation(exitFrames, true, true)
   Transform.create(exit1, blenderTransform(exit1T, buildingCore))
